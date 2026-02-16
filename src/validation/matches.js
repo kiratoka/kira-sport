@@ -43,12 +43,12 @@ export const matchIdParamSchema = z.object({
  * Helper: cek apakah string adalah ISO date yang valid.
  * Dipakai di refinement supaya startTime/endTime harus format ISO.
  */
-function isValidIsoDateString(value) {
-  if (typeof value !== "string") return false;
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime());
-}
+// Use Zod 4's built-in strict ISO datetime validation
+const isoDateTimeSchema = z.iso.datetime();
 
+function isValidIsoDateString(value) {
+  return isoDateTimeSchema.safeParse(value).success;
+}
 /**
  * Validasi body untuk membuat match baru.
  * - sport, homeTeam, awayTeam: string tidak boleh kosong.

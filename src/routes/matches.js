@@ -68,6 +68,12 @@ matchRouter.post('/', async (req, res) => {
     // Ambil nilai yang perlu diolah khusus (tanggal & skor) dari hasil validasi
     const { data: { startTime, endTime, homeScore, awayScore } } = parsed;
 
+    // Hitung status awal pake helper getMatchStatus
+    // Catatan: getMatchStatus bisa aja balikin null (misal ada case yang belum di-handle)
+    // Biar aman dan nggak pernah nulis NULL ke DB, kita kasih fallback default "scheduled"
+    const rawStatus = getMatchStatus(startTime, endTime);
+    const safeStatus = rawStatus ?? 'scheduled'; // fallback kalau null/undefined
+
     try {
         // Bro, jadi gini… pas ada kode `const [event] = await db.insert(matches).values({...}).returning();`
         // Maksudnya apa? Biar gampang, ini penjelasan nguliknya pake bahasa tongkrongan:
@@ -99,7 +105,9 @@ matchRouter.post('/', async (req, res) => {
             endTime: new Date(endTime),
             homeScore: homeScore ?? 0,                         // Nilai default skor = 0 kalau ga dikirim
             awayScore: awayScore ?? 0,
-            status: getMatchStatus(startTime, endTime),        // Biar status match langsung bener (scheduled/live/finished)
+            // Pakai status yang sudah dipastikan nggak null
+            // Jadi di DB nggak akan pernah ada status NULL
+            status: safeStatus,
         }).returning(); // <– ini Drizzle ORM, bro, bukan JS biasa
 
         // Nah setelah dapet object match barunya (`event`), kita cek:
@@ -113,8 +121,11 @@ matchRouter.post('/', async (req, res) => {
         // Terakhir, balikkin status sukses 201 (Created), plus data match barunya ke client yang request
         res.status(201).json({ data: event });
     } catch (e) {
-        // Kalo insert gagal (DB error, constraint, dll) → 500 + detail error
-        res.status(500).json({ error: 'Failed to create match.', details: JSON.stringify(e) });
+        // Kalo insert gagal (DB error, constraint, dll):
+        // - Error lengkapnya kita log di server (buat debugging developer)
+        // - Client cuma dikasih pesan generic, tanpa detail internal (lebih aman, gak bocorin info sensitif)
+        console.error(e);
+        res.status(500).json({ error: 'Failed to create match.' });
     }
 });
 

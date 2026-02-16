@@ -7,8 +7,9 @@
     "start": "node src/index.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio" ,
-    "demo" : "node src/crud-demo.js"
+    "db:studio": "drizzle-kit studio",
+    "demo": "node src/crud-demo.js",
+    "test": "node --test src/validation/matches.test.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,7 @@
     "dotenv": "^17.2.4",
     "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
-    "pg": "^8.18.0"
+    "pg": "^8.18.0",
+    "zod": "^4.3.6"
   }
 }

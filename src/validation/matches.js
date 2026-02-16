@@ -40,8 +40,9 @@ export const matchIdParamSchema = z.object({
 // ========== Body Schemas ==========
 
 /**
- * Helper: cek apakah string adalah ISO date yang valid.
- * Dipakai di refinement supaya startTime/endTime harus format ISO.
+ * Check whether a value is a valid ISO date string.
+ * @param {*} value - The value to validate as an ISO date string.
+ * @returns {boolean} `true` if `value` is a string that can be parsed as a valid date, `false` otherwise.
  */
 function isValidIsoDateString(value) {
   if (typeof value !== "string") return false;

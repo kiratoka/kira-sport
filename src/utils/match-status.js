@@ -2,8 +2,12 @@
 import { MATCH_STATUS } from '../validation/matches.js';
 
 /**
- * Nentuin status pertandingan berdasarkan waktu mulai & selesai.
- * Kalo gak dikasih now, pakai waktu sekarang (buat testing bisa dikasih manual).
+ * Determine match status based on start and end times.
+ *
+ * @param {Date|string|number} startTime - Match start time; a Date or a value parseable by Date.
+ * @param {Date|string|number} endTime - Match end time; a Date or a value parseable by Date.
+ * @param {Date} [now=new Date()] - Reference time for the comparison (useful for testing).
+ * @returns {string|null} `MATCH_STATUS.SCHEDULED` if `now` is before `startTime`, `MATCH_STATUS.FINISHED` if `now` is on or after `endTime`, `MATCH_STATUS.LIVE` if `now` is between `startTime` (inclusive) and `endTime` (exclusive); `null` if either input yields an invalid date.
  */
 export function getMatchStatus(startTime, endTime, now = new Date()) {
     // Ubah ke objek Date biar bisa dibandingin
@@ -30,8 +34,10 @@ export function getMatchStatus(startTime, endTime, now = new Date()) {
 }
 
 /**
- * Sync status pertandingan di DB dengan kenyataan (waktu).
- * Kalo status di DB beda dengan yang seharusnya, update lewat updateStatus.
+ * Ensure a match object's status reflects the current time-based status, updating persistence when it differs.
+ * @param {{startTime: string|Date, endTime: string|Date, status: string}} match - Match object containing `startTime`, `endTime`, and current `status`; `status` may be mutated.
+ * @param {(newStatus: string) => Promise<void>|(newStatus: string) => void} updateStatus - Function invoked with the new status to persist when an update is required.
+ * @returns {string} The match's `status` after synchronization.
  */
 export async function syncMatchStatus(match, updateStatus) {
     // Hitung status yang bener menurut waktu
